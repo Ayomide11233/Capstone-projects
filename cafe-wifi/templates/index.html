@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrewDesk — London's Best Cafes for Working</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f5f0e8;
+      --dark: #1a1208;
+      --brown: #5c3d1e;
+      --espresso: #2c1a0e;
+      --gold: #c8963e;
+      --warm-mid: #8b6340;
+      --light-brown: #d4a96a;
+      --card-bg: #fffdf8;
+      --border: #e8dcc8;
+      --green: #3a6b4a;
+      --red: #8b2020;
+      --tag-bg: #f0e6d3;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--espresso);
+      padding: 0 2rem;
+      position: sticky; top: 0; z-index: 100;
+      border-bottom: 3px solid var(--gold);
+    }
+    .header-inner {
+      max-width: 1300px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 70px;
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem; font-weight: 900;
+      color: var(--cream);
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--gold); }
+    .header-actions {
+      display: flex; gap: 1rem; align-items: center;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.55rem 1.2rem;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; font-weight: 500;
+      cursor: pointer; border: none;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-gold {
+      background: var(--gold); color: var(--espresso);
+    }
+    .btn-gold:hover { background: var(--light-brown); }
+    .btn-outline {
+      background: transparent; color: var(--cream);
+      border: 1.5px solid rgba(255,255,255,0.3);
+    }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-danger {
+      background: var(--red); color: white;
+      padding: 0.4rem 0.8rem; font-size: 0.8rem;
+    }
+    .btn-danger:hover { background: #a52525; }
+    .btn-sm {
+      padding: 0.4rem 0.9rem; font-size: 0.82rem;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--espresso);
+      padding: 4rem 2rem 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,150,62,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(200,150,62,0.15);
+      border: 1px solid rgba(200,150,62,0.4);
+      color: var(--gold);
+      font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase;
+      padding: 0.3rem 0.9rem; border-radius: 20px;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 900;
+      color: var(--cream);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .hero h1 em { color: var(--gold); font-style: italic; }
+    .hero p {
+      color: rgba(245,240,232,0.65);
+      font-size: 1.05rem; max-width: 520px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 2.5rem;
+      margin-top: 2rem;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 700;
+      color: var(--gold);
+    }
+    .stat-label {
+      font-size: 0.78rem; color: rgba(245,240,232,0.5);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-top: 0.2rem;
+    }
+
+    /* ── FILTERS ── */
+    .filters-bar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      position: sticky; top: 70px; z-index: 90;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    }
+    .filters-inner {
+      max-width: 1300px; margin: 0 auto;
+      display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center;
+    }
+    .filter-label {
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--warm-mid); text-transform: uppercase;
+      letter-spacing: 1px; margin-right: 0.2rem;
+    }
+    .filter-chip {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: white;
+      font-size: 0.84rem; cursor: pointer;
+      color: var(--brown);
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .filter-chip:hover { border-color: var(--gold); color: var(--gold); }
+    .filter-chip.active {
+      background: var(--gold); border-color: var(--gold);
+      color: var(--espresso); font-weight: 500;
+    }
+    .filter-sep {
+      width: 1px; height: 24px;
+      background: var(--border); margin: 0 0.4rem;
+    }
+    .search-wrap {
+      margin-left: auto;
+      position: relative;
+    }
+    .search-wrap input {
+      padding: 0.45rem 1rem 0.45rem 2.2rem;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--dark);
+      background: var(--cream);
+      width: 220px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--gold); }
+    .search-icon {
+      position: absolute; left: 0.7rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--warm-mid); font-size: 0.9rem;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      max-width: 1300px; margin: 0 auto;
+      padding: 2.5rem 2rem;
+    }
+    .results-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .results-count {
+      font-size: 0.88rem; color: var(--warm-mid);
+    }
+    .results-count strong { color: var(--dark); }
+
+    /* ── GRID ── */
+    .cafe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* ── CARD ── */
+    .cafe-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex; flex-direction: column;
+    }
+    .cafe-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(44,26,14,0.12);
+    }
+    .card-img {
+      width: 100%; height: 200px;
+      object-fit: cover;
+      background: #e8dcc8;
+      display: block;
+    }
+    .card-img-placeholder {
+      width: 100%; height: 200px;
+      background: linear-gradient(135deg, #e8dcc8, #d4b896);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .card-body {
+      padding: 1.2rem 1.4rem 1rem;
+      flex: 1; display: flex; flex-direction: column;
+    }
+    .card-location {
+      font-size: 0.75rem; font-weight: 500;
+      color: var(--warm-mid); text-transform: uppercase;
+      letter-spacing: 1.2px; margin-bottom: 0.4rem;
+    }
+    .card-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--espresso);
+      margin-bottom: 0.9rem;
+      line-height: 1.2;
+    }
+    .card-amenities {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    .amenity {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+      font-size: 0.76rem; font-weight: 500;
+    }
+    .amenity.yes {
+      background: rgba(58,107,74,0.1); color: var(--green);
+      border: 1px solid rgba(58,107,74,0.2);
+    }
+    .amenity.no {
+      background: rgba(139,32,32,0.07); color: #a04040;
+      border: 1px solid rgba(139,32,32,0.15);
+      text-decoration: line-through; opacity: 0.7;
+    }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    .card-meta {
+      display: flex; gap: 1rem;
+    }
+    .meta-item {
+      font-size: 0.8rem; color: var(--warm-mid);
+    }
+    .meta-item strong { color: var(--dark); }
+    .card-actions {
+      display: flex; gap: 0.5rem;
+    }
+    .btn-map {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 5px;
+      font-size: 0.78rem; font-weight: 500;
+      background: var(--espresso); color: var(--cream);
+      border: none; cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-map:hover { background: var(--brown); }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      grid-column: 1/-1;
+      text-align: center; padding: 4rem 2rem;
+      color: var(--warm-mid);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; color: var(--brown);
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(26,18,8,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--card-bg);
+      border-radius: 16px;
+      width: 100%; max-width: 560px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 2rem;
+      transform: translateY(20px);
+      transition: transform 0.25s;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; font-weight: 700; color: var(--espresso);
+    }
+    .modal-close {
+      background: none; border: none; font-size: 1.4rem;
+      cursor: pointer; color: var(--warm-mid);
+      padding: 0.2rem; line-height: 1;
+    }
+    .modal-close:hover { color: var(--dark); }
+    .form-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; font-size: 0.82rem; font-weight: 500;
+      color: var(--warm-mid); margin-bottom: 0.4rem;
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .form-group input, .form-group select {
+      width: 100%; padding: 0.6rem 0.9rem;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.92rem; font-family: 'DM Sans', sans-serif;
+      color: var(--dark); background: white;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--gold);
+    }
+    .form-group input.full { grid-column: 1/-1; }
+    .checkboxes {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
+      margin-bottom: 1.2rem;
+    }
+    .check-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.88rem; color: var(--brown);
+      cursor: pointer; user-select: none;
+    }
+    .check-item input[type=checkbox] {
+      width: 16px; height: 16px; accent-color: var(--gold);
+    }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 0.8rem;
+      margin-top: 1.5rem; padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-cancel {
+      background: transparent; color: var(--warm-mid);
+      border: 1.5px solid var(--border); padding: 0.6rem 1.4rem;
+      border-radius: 7px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    }
+    .btn-submit {
+      background: var(--gold); color: var(--espresso);
+      border: none; padding: 0.6rem 1.6rem;
+      border-radius: 7px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .btn-submit:hover { background: var(--light-brown); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--espresso); color: var(--cream);
+      padding: 0.8rem 1.4rem; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s;
+      z-index: 300;
+      border-left: 4px solid var(--gold);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { border-left-color: var(--red); }
+
+    /* ── LOADING ── */
+    .loading {
+      grid-column: 1/-1; text-align: center; padding: 3rem;
+      color: var(--warm-mid);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CONFIRM MODAL ── */
+    .confirm-modal {
+      background: var(--card-bg); border-radius: 12px;
+      padding: 1.8rem; max-width: 380px; width: 100%;
+      text-align: center;
+      transform: translateY(20px);
+      transition: transform 0.25s;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    }
+    .modal-backdrop.open .confirm-modal { transform: translateY(0); }
+    .confirm-modal h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem; color: var(--espresso);
+      margin-bottom: 0.6rem;
+    }
+    .confirm-modal p { color: var(--warm-mid); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .confirm-actions { display: flex; gap: 0.8rem; justify-content: center; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2rem; }
+      .hero-stats { gap: 1.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .checkboxes { grid-template-columns: 1fr; }
+      .filters-inner { gap: 0.5rem; }
+      .search-wrap { margin-left: 0; width: 100%; }
+      .search-wrap input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo">Brew<span>Desk</span></div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" onclick="openAddModal()">＋ Add Cafe</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">☕ London's Remote Work Spots</div>
+  <h1>Find your perfect<br><em>coffee &amp; wifi</em> spot</h1>
+  <p>Curated cafes in London with strong wifi, power sockets, and great coffee — everything you need to get work done.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num" id="total-count">—</div>
+      <div class="stat-label">Cafes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="wifi-count">—</div>
+      <div class="stat-label">With Wifi</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="socket-count">—</div>
+      <div class="stat-label">Sockets</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="areas-count">—</div>
+      <div class="stat-label">Areas</div>
+    </div>
+  </div>
+</section>
+
+<!-- FILTERS -->
+<div class="filters-bar">
+  <div class="filters-inner">
+    <span class="filter-label">Area</span>
+    <div id="location-filters" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button class="filter-chip active" data-location="">All</button>
+    </div>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Needs</span>
+    <button class="filter-chip" id="filter-wifi" onclick="toggleFilter('wifi')">📶 Wifi</button>
+    <button class="filter-chip" id="filter-sockets" onclick="toggleFilter('sockets')">🔌 Sockets</button>
+    <button class="filter-chip" id="filter-calls" onclick="toggleFilter('calls')">📞 Calls OK</button>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search cafes…" oninput="filterCafes()">
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="results-header">
+    <div class="results-count">Showing <strong id="showing-count">0</strong> cafes</div>
+  </div>
+  <div class="cafe-grid" id="cafe-grid">
+    <div class="loading"><div class="spinner"></div>Loading cafes…</div>
+  </div>
+</main>
+
+<!-- ADD CAFE MODAL -->
+<div class="modal-backdrop" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add a New Cafe</div>
+      <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cafe Name *</label>
+        <input type="text" id="f-name" placeholder="e.g. The Espresso Room">
+      </div>
+      <div class="form-group">
+        <label>Location / Area *</label>
+        <input type="text" id="f-location" placeholder="e.g. Shoreditch">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Google Maps URL *</label>
+      <input type="url" id="f-map" placeholder="https://goo.gl/maps/…">
+    </div>
+    <div class="form-group">
+      <label>Image URL</label>
+      <input type="url" id="f-img" placeholder="https://…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Seats</label>
+        <select id="f-seats">
+          <option value="">Unknown</option>
+          <option value="0-10">0–10</option>
+          <option value="10-20">10–20</option>
+          <option value="20-30">20–30</option>
+          <option value="30-40">30–40</option>
+          <option value="50+">50+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Coffee Price</label>
+        <input type="text" id="f-price" placeholder="e.g. £2.80">
+      </div>
+    </div>
+    <div class="checkboxes">
+      <label class="check-item"><input type="checkbox" id="f-wifi"> 📶 Has Wifi</label>
+      <label class="check-item"><input type="checkbox" id="f-sockets"> 🔌 Has Sockets</label>
+      <label class="check-item"><input type="checkbox" id="f-toilet"> 🚻 Has Toilet</label>
+      <label class="check-item"><input type="checkbox" id="f-calls"> 📞 Can Take Calls</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('add-modal')">Cancel</button>
+      <button class="btn-submit" onclick="submitCafe()">Add Cafe</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="confirm-modal">
+    <h3>Remove this cafe?</h3>
+    <p>This will permanently delete the cafe from the directory.</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeModal('confirm-modal')">Keep it</button>
+      <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  let allCafes = [];
+  let locations = [];
+  let activeLocation = '';
+  let activeFilters = { wifi: false, sockets: false, calls: false };
+
+  async function fetchCafes() {
+    const res = await fetch('/api/cafes');
+    allCafes = await res.json();
+    updateStats();
+    filterCafes();
+  }
+
+  async function fetchLocations() {
+    const res = await fetch('/api/locations');
+    locations = await res.json();
+    renderLocationFilters();
+  }
+
+  function updateStats() {
+    document.getElementById('total-count').textContent = allCafes.length;
+    document.getElementById('wifi-count').textContent = allCafes.filter(c => c.has_wifi).length;
+    document.getElementById('socket-count').textContent = allCafes.filter(c => c.has_sockets).length;
+    document.getElementById('areas-count').textContent = [...new Set(allCafes.map(c => c.location))].length;
+  }
+
+  function renderLocationFilters() {
+    const wrap = document.getElementById('location-filters');
+    wrap.innerHTML = '<button class="filter-chip active" data-location="" onclick="setLocation(this, \'\')">All</button>';
+    locations.forEach(loc => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-chip';
+      btn.dataset.location = loc;
+      btn.textContent = loc;
+      btn.onclick = () => setLocation(btn, loc);
+      wrap.appendChild(btn);
+    });
+  }
+
+  function setLocation(el, loc) {
+    document.querySelectorAll('#location-filters .filter-chip').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    activeLocation = loc;
+    filterCafes();
+  }
+
+  function toggleFilter(type) {
+    activeFilters[type] = !activeFilters[type];
+    const ids = { wifi: 'filter-wifi', sockets: 'filter-sockets', calls: 'filter-calls' };
+    document.getElementById(ids[type]).classList.toggle('active', activeFilters[type]);
+    filterCafes();
+  }
+
+  function filterCafes() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    let filtered = allCafes.filter(c => {
+      if (activeLocation && c.location !== activeLocation) return false;
+      if (activeFilters.wifi && !c.has_wifi) return false;
+      if (activeFilters.sockets && !c.has_sockets) return false;
+      if (activeFilters.calls && !c.can_take_calls) return false;
+      if (search && !c.name.toLowerCase().includes(search) && !c.location.toLowerCase().includes(search)) return false;
+      return true;
+    });
+    renderCafes(filtered);
+  }
+
+  function renderCafes(cafes) {
+    const grid = document.getElementById('cafe-grid');
+    document.getElementById('showing-count').textContent = cafes.length;
+
+    if (!cafes.length) {
+      grid.innerHTML = `<div class="empty"><div class="empty-icon">☕</div><h3>No cafes found</h3><p>Try adjusting your filters or search term.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = cafes.map(c => cafeCard(c)).join('');
+  }
+
+  function cafeCard(c) {
+    const amenities = [
+      { key: 'has_wifi', icon: '📶', label: 'Wifi' },
+      { key: 'has_sockets', icon: '🔌', label: 'Sockets' },
+      { key: 'has_toilet', icon: '🚻', label: 'Toilet' },
+      { key: 'can_take_calls', icon: '📞', label: 'Calls OK' },
+    ];
+    const amenityHtml = amenities.map(a =>
+      `<span class="amenity ${c[a.key] ? 'yes' : 'no'}">${a.icon} ${a.label}</span>`
+    ).join('');
+
+    const imgHtml = c.img_url
+      ? `<img class="card-img" src="${escHtml(c.img_url)}" alt="${escHtml(c.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const placeholderStyle = c.img_url ? 'display:none' : '';
+
+    return `
+    <div class="cafe-card" id="card-${c.id}">
+      ${imgHtml}
+      <div class="card-img-placeholder" style="${placeholderStyle}">☕</div>
+      <div class="card-body">
+        <div class="card-location">${escHtml(c.location)}</div>
+        <div class="card-name">${escHtml(c.name)}</div>
+        <div class="card-amenities">${amenityHtml}</div>
+        <div class="card-footer">
+          <div class="card-meta">
+            ${c.seats ? `<div class="meta-item">🪑 <strong>${escHtml(c.seats)}</strong> seats</div>` : ''}
+            ${c.coffee_price ? `<div class="meta-item">☕ <strong>${escHtml(c.coffee_price)}</strong></div>` : ''}
+          </div>
+          <div class="card-actions">
+            <a class="btn-map" href="${escHtml(c.map_url)}" target="_blank" rel="noopener">📍 Map</a>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete(${c.id}, '${escHtml(c.name).replace(/'/g, "\\'")}')">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── ADD CAFE ──
+  function openAddModal() {
+    document.getElementById('add-modal').classList.add('open');
+    document.getElementById('f-name').focus();
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  async function submitCafe() {
+    const name = document.getElementById('f-name').value.trim();
+    const location = document.getElementById('f-location').value.trim();
+    const map_url = document.getElementById('f-map').value.trim();
+    const img_url = document.getElementById('f-img').value.trim();
+    const seats = document.getElementById('f-seats').value;
+    const coffee_price = document.getElementById('f-price').value.trim();
+    const has_wifi = document.getElementById('f-wifi').checked;
+    const has_sockets = document.getElementById('f-sockets').checked;
+    const has_toilet = document.getElementById('f-toilet').checked;
+    const can_take_calls = document.getElementById('f-calls').checked;
+
+    if (!name || !location || !map_url) {
+      showToast('Please fill in the required fields.', true); return;
+    }
+
+    const res = await fetch('/api/cafes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, location, map_url, img_url, seats, coffee_price,
+        has_wifi, has_sockets, has_toilet, can_take_calls })
+    });
+
+    if (res.ok) {
+      const cafe = await res.json();
+      allCafes.push(cafe);
+      if (!locations.includes(cafe.location)) {
+        locations.push(cafe.location);
+        locations.sort();
+        renderLocationFilters();
+      }
+      updateStats();
+      filterCafes();
+      closeModal('add-modal');
+      showToast(`"${cafe.name}" added to the directory!`);
+      // Reset form
+      ['f-name','f-location','f-map','f-img','f-price'].forEach(id => document.getElementById(id).value = '');
+      ['f-wifi','f-sockets','f-toilet','f-calls'].forEach(id => document.getElementById(id).checked = false);
+      document.getElementById('f-seats').value = '';
+    } else {
+      const err = await res.json();
+      showToast(err.error || 'Failed to add cafe.', true);
+    }
+  }
+
+  // ── DELETE ──
+  let pendingDeleteId = null;
+
+  function confirmDelete(id, name) {
+    pendingDeleteId = id;
+    document.getElementById('confirm-modal').classList.add('open');
+    document.getElementById('confirm-delete-btn').onclick = () => deleteCafe(id, name);
+  }
+
+  async function deleteCafe(id, name) {
+    const res = await fetch(`/api/cafes/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      allCafes = allCafes.filter(c => c.id !== id);
+      updateStats();
+      filterCafes();
+      closeModal('confirm-modal');
+      showToast(`"${name}" removed from the directory.`);
+    } else {
+      showToast('Failed to delete cafe.', true);
+    }
+  }
+
+  // ── TOAST ──
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+
+  // Close modals on backdrop click
+  document.querySelectorAll('.modal-backdrop').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+  });
+
+  // Keyboard ESC
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(el => el.classList.remove('open'));
+  });
+
+  // Init
+  fetchLocations();
+  fetchCafes();
+</script>
+</body>
+</html>
