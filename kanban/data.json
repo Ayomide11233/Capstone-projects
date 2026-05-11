@@ -61,6 +61,22 @@
       "column": "Backlog",
       "priority": "medium",
       "created": "2025-05-09"
+    },
+    {
+      "id": "c72ccbd8",
+      "title": "Bible app design",
+      "desc": "",
+      "column": "Backlog",
+      "priority": "high",
+      "created": "2026-05-11"
+    },
+    {
+      "id": "716f9f90",
+      "title": "Portfolio update",
+      "desc": "",
+      "column": "In Progress",
+      "priority": "medium",
+      "created": "2026-05-11"
     }
   ]
 }
