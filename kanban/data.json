@@ -1,0 +1,66 @@
+{
+  "columns": [
+    "Backlog",
+    "In Progress",
+    "Review",
+    "Done"
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Set up project repository",
+      "desc": "Init git repo, add README and .gitignore",
+      "column": "Done",
+      "priority": "low",
+      "created": "2025-05-01"
+    },
+    {
+      "id": "t2",
+      "title": "Design database schema",
+      "desc": "Plan tables for users, tasks, and comments",
+      "column": "Done",
+      "priority": "high",
+      "created": "2025-05-02"
+    },
+    {
+      "id": "t3",
+      "title": "Build REST API endpoints",
+      "desc": "CRUD operations for tasks and columns",
+      "column": "Review",
+      "priority": "high",
+      "created": "2025-05-05"
+    },
+    {
+      "id": "t4",
+      "title": "Write unit tests",
+      "desc": "Cover all API routes with pytest",
+      "column": "In Progress",
+      "priority": "medium",
+      "created": "2025-05-06"
+    },
+    {
+      "id": "t5",
+      "title": "Implement drag-and-drop UI",
+      "desc": "Allow cards to move between columns",
+      "column": "In Progress",
+      "priority": "high",
+      "created": "2025-05-07"
+    },
+    {
+      "id": "t6",
+      "title": "Add user authentication",
+      "desc": "Login, signup, JWT tokens",
+      "column": "Backlog",
+      "priority": "high",
+      "created": "2025-05-08"
+    },
+    {
+      "id": "t7",
+      "title": "Deploy to production",
+      "desc": "Set up CI/CD pipeline and cloud hosting",
+      "column": "Backlog",
+      "priority": "medium",
+      "created": "2025-05-09"
+    }
+  ]
+}

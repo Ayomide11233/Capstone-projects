@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222538;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8eaf0;
+    --text2: #8b90a7;
+    --text3: #555b73;
+    --accent: #6C63FF;
+    --accent-dim: rgba(108,99,255,0.15);
+    --red: #ff5f6d;
+    --amber: #f5a623;
+    --green: #3ecf8e;
+    --blue: #4fa3e3;
+    --col-backlog: #8b90a7;
+    --col-progress: #4fa3e3;
+    --col-review: #f5a623;
+    --col-done: #3ecf8e;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .stats { display: flex; gap: 8px; }
+
+  .stat-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    background: var(--surface2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #7d75ff; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(108,99,255,0.4); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .btn-danger {
+    background: rgba(255,95,109,0.1);
+    color: var(--red);
+    border: 1px solid rgba(255,95,109,0.2);
+  }
+  .btn-danger:hover { background: rgba(255,95,109,0.2); }
+
+  /* ── Board ── */
+  .board-wrap {
+    padding: 24px 28px;
+    overflow-x: auto;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(240px, 1fr));
+    gap: 16px;
+    align-items: start;
+    min-width: 900px;
+  }
+
+  /* ── Column ── */
+  .column {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .column.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-dim);
+  }
+
+  .col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .col-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .col-name {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .col-count {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 999px;
+    padding: 1px 8px;
+    color: var(--text2);
+  }
+
+  .col-add-btn {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .col-add-btn:hover { color: var(--text); background: var(--surface2); border-color: var(--border2); }
+
+  .cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    min-height: 80px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    cursor: grab;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+  }
+
+  .card.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+    transform: scale(0.97);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+
+  .card:hover .card-actions { opacity: 1; }
+
+  .icon-btn {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: var(--text3);
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface); color: var(--text2); }
+  .icon-btn.del:hover { color: var(--red); }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .priority-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+  }
+
+  .priority-high   { background: rgba(255,95,109,0.12); color: var(--red); }
+  .priority-medium { background: rgba(245,166,35,0.12); color: var(--amber); }
+  .priority-low    { background: rgba(62,207,142,0.12); color: var(--green); }
+
+  .card-date {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Drop placeholder ── */
+  .drop-placeholder {
+    height: 60px;
+    border: 1.5px dashed var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--accent-dim);
+    pointer-events: none;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.2s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title { font-size: 16px; font-weight: 600; }
+
+  .modal-close {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: none;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--surface2); color: var(--text); }
+
+  .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    transition: border-color 0.15s;
+    outline: none;
+    appearance: none;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .field textarea { resize: vertical; min-height: 80px; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 22px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 24px 12px;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  .empty-icon { font-size: 24px; margin-bottom: 6px; display: block; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.25s;
+    box-shadow: var(--shadow);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📋</div>
+    KanFlow
+  </div>
+  <div class="header-right">
+    <div class="stats" id="stats"></div>
+    <button class="btn btn-primary" onclick="openModal()">+ New Task</button>
+  </div>
+</header>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="e => { if(e.target===this) closeModal(); }">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">New Task</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Task Title</label>
+        <input type="text" id="f-title" placeholder="What needs to be done?" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea id="f-desc" placeholder="Add details (optional)…"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Column</label>
+          <select id="f-column"></select>
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="f-priority">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🔴 High</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modalSave" onclick="saveTask()">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let board = { columns: [], tasks: [] };
+let editingId = null;
+let dragSrc = null;
+
+const COL_COLORS = {
+  "Backlog":     "#8b90a7",
+  "In Progress": "#4fa3e3",
+  "Review":      "#f5a623",
+  "Done":        "#3ecf8e"
+};
+
+async function fetchBoard() {
+  const res = await fetch('/api/board');
+  board = await res.json();
+  render();
+}
+
+function render() {
+  renderStats();
+  renderBoard();
+}
+
+function renderStats() {
+  const total = board.tasks.length;
+  const done  = board.tasks.filter(t => t.column === 'Done').length;
+  const high  = board.tasks.filter(t => t.priority === 'high' && t.column !== 'Done').length;
+  document.getElementById('stats').innerHTML = `
+    <span class="stat-badge">📊 ${total} tasks</span>
+    <span class="stat-badge">✅ ${done} done</span>
+    ${high ? `<span class="stat-badge" style="color:#ff5f6d;border-color:rgba(255,95,109,0.3)">🔴 ${high} urgent</span>` : ''}
+  `;
+}
+
+function renderBoard() {
+  const el = document.getElementById('board');
+  el.innerHTML = '';
+  board.columns.forEach(col => {
+    const tasks = board.tasks.filter(t => t.column === col);
+    const color = COL_COLORS[col] || '#8b90a7';
+    const div = document.createElement('div');
+    div.className = 'column';
+    div.dataset.col = col;
+    div.innerHTML = `
+      <div class="col-header">
+        <div class="col-title-row">
+          <span class="col-dot" style="background:${color}"></span>
+          <span class="col-name">${col}</span>
+          <span class="col-count">${tasks.length}</span>
+        </div>
+        <button class="col-add-btn" onclick="openModal('${col}')" title="Add task">+</button>
+      </div>
+      <div class="cards-list" data-col="${col}">
+        ${tasks.length === 0
+          ? `<div class="empty"><span class="empty-icon">○</span>No tasks yet</div>`
+          : tasks.map(taskCard).join('')}
+      </div>
+    `;
+    el.appendChild(div);
+  });
+
+  // Drag events on columns
+  document.querySelectorAll('.column').forEach(col => {
+    col.addEventListener('dragover', onDragOver);
+    col.addEventListener('dragleave', onDragLeave);
+    col.addEventListener('drop', onDrop);
+  });
+
+  // Drag events on cards
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('dragstart', onDragStart);
+    card.addEventListener('dragend', onDragEnd);
+  });
+}
+
+function taskCard(t) {
+  return `
+    <div class="card" draggable="true" data-id="${t.id}">
+      <div class="card-top">
+        <span class="card-title">${escHtml(t.title)}</span>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="event.stopPropagation(); openEdit('${t.id}')" title="Edit">✏️</button>
+          <button class="icon-btn del" onclick="event.stopPropagation(); deleteTask('${t.id}')" title="Delete">🗑</button>
+        </div>
+      </div>
+      ${t.desc ? `<div class="card-desc">${escHtml(t.desc)}</div>` : ''}
+      <div class="card-footer">
+        <span class="priority-badge priority-${t.priority}">${t.priority}</span>
+        <span class="card-date">${t.created}</span>
+      </div>
+    </div>
+  `;
+}
+
+// ── Drag & Drop ──
+function onDragStart(e) {
+  dragSrc = e.currentTarget.dataset.id;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+  document.querySelectorAll('.drop-placeholder').forEach(p => p.remove());
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  const col = e.currentTarget;
+  col.classList.add('drag-over');
+  const existing = col.querySelector('.drop-placeholder');
+  if (!existing) {
+    const ph = document.createElement('div');
+    ph.className = 'drop-placeholder';
+    col.querySelector('.cards-list').appendChild(ph);
+  }
+}
+
+function onDragLeave(e) {
+  const col = e.currentTarget;
+  if (!col.contains(e.relatedTarget)) {
+    col.classList.remove('drag-over');
+    col.querySelectorAll('.drop-placeholder').forEach(p => p.remove());
+  }
+}
+
+async function onDrop(e) {
+  e.preventDefault();
+  const col = e.currentTarget;
+  const targetCol = col.dataset.col;
+  col.classList.remove('drag-over');
+  col.querySelectorAll('.drop-placeholder').forEach(p => p.remove());
+
+  if (!dragSrc) return;
+  const task = board.tasks.find(t => t.id === dragSrc);
+  if (!task || task.column === targetCol) return;
+
+  task.column = targetCol;
+  render();
+
+  await fetch(`/api/tasks/${dragSrc}/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ column: targetCol })
+  });
+  showToast(`Moved to "${targetCol}"`);
+}
+
+// ── Modal ──
+function openModal(col) {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'New Task';
+  document.getElementById('modalSave').textContent = 'Create Task';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-priority').value = 'medium';
+  populateColSelect(col || board.columns[0]);
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-title').focus(), 100);
+}
+
+function openEdit(id) {
+  const task = board.tasks.find(t => t.id === id);
+  if (!task) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Task';
+  document.getElementById('modalSave').textContent = 'Save Changes';
+  document.getElementById('f-title').value = task.title;
+  document.getElementById('f-desc').value = task.desc;
+  document.getElementById('f-priority').value = task.priority;
+  populateColSelect(task.column);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function populateColSelect(selected) {
+  const sel = document.getElementById('f-column');
+  sel.innerHTML = board.columns.map(c =>
+    `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`
+  ).join('');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editingId = null;
+}
+
+async function saveTask() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+
+  const payload = {
+    title,
+    desc:     document.getElementById('f-desc').value.trim(),
+    column:   document.getElementById('f-column').value,
+    priority: document.getElementById('f-priority').value,
+  };
+
+  if (editingId) {
+    const res = await fetch(`/api/tasks/${editingId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const updated = await res.json();
+    board.tasks = board.tasks.map(t => t.id === editingId ? updated : t);
+    showToast('Task updated');
+  } else {
+    const res = await fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const task = await res.json();
+    board.tasks.push(task);
+    showToast('Task created');
+  }
+
+  closeModal();
+  render();
+}
+
+async function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  board.tasks = board.tasks.filter(t => t.id !== id);
+  render();
+  await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+  showToast('Task deleted');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Keyboard shortcut: Escape closes modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    if (document.getElementById('modalOverlay').classList.contains('open')) saveTask();
+  }
+});
+
+// Close modal clicking backdrop
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+fetchBoard();
+</script>
+</body>
+</html>
