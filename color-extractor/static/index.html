@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChromaLens — Colour Extractor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --text: #f0ede8;
+      --muted: #888;
+      --accent: #e8ff47;
+      --accent2: #ff6b35;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.6;
+    }
+
+    header {
+      padding: 2.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: conic-gradient(#e8ff47, #ff6b35, #a855f7, #3b82f6, #10b981, #e8ff47);
+      flex-shrink: 0;
+      position: relative;
+      top: 2px;
+    }
+
+    .logo-text {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .logo-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      padding: 5rem 3rem 3rem;
+      max-width: 900px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .hero h1 span {
+      color: var(--accent);
+    }
+
+    .hero p {
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: 1rem;
+      font-family: 'DM Mono', monospace;
+      max-width: 480px;
+      line-height: 1.7;
+    }
+
+    /* Upload zone */
+    .upload-section {
+      padding: 2rem 3rem 4rem;
+    }
+
+    .drop-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: 16px;
+      padding: 4rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface);
+      position: relative;
+      max-width: 680px;
+    }
+
+    .drop-zone:hover, .drop-zone.dragging {
+      border-color: var(--accent);
+      background: #1a1a0f;
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 1.5rem;
+      border-radius: 12px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+
+    .drop-zone h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .drop-zone p {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .drop-zone .accent-link {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* Preview + results layout */
+    .results-wrapper {
+      padding: 0 3rem 5rem;
+      display: none;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .results-wrapper.visible {
+      display: flex;
+    }
+
+    .preview-panel {
+      flex: 1 1 260px;
+      max-width: 360px;
+    }
+
+    .preview-panel .label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .preview-panel img {
+      width: 100%;
+      border-radius: 12px;
+      display: block;
+      object-fit: cover;
+      max-height: 320px;
+      border: 1px solid var(--border);
+    }
+
+    /* Palette bar */
+    .palette-bar {
+      display: flex;
+      height: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .palette-bar-segment {
+      transition: flex 0.5s ease;
+    }
+
+    /* Colors panel */
+    .colors-panel {
+      flex: 2 1 380px;
+    }
+
+    .colors-panel .label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .color-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: stretch;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      position: relative;
+    }
+
+    .color-card:hover {
+      transform: translateY(-2px);
+      border-color: #444;
+    }
+
+    .color-swatch {
+      width: 52px;
+      flex-shrink: 0;
+    }
+
+    .color-info {
+      padding: 0.75rem 1rem;
+      flex: 1;
+    }
+
+    .color-hex {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .color-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .color-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .color-pct {
+      font-size: 0.7rem;
+      font-family: 'DM Mono', monospace;
+      background: var(--surface2);
+      padding: 2px 7px;
+      border-radius: 20px;
+      color: var(--muted);
+    }
+
+    .color-rgb {
+      font-size: 0.65rem;
+      color: #555;
+      font-family: 'DM Mono', monospace;
+      margin-top: 2px;
+    }
+
+    .copied-toast {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(232,255,71,0.12);
+      border-radius: 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .color-card.copied .copied-toast { opacity: 1; }
+
+    /* Rank badge */
+    .rank-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--surface2);
+      font-size: 0.6rem;
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      padding: 2rem 3rem;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .loading.visible { display: flex; }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading p {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* New upload button */
+    .new-upload-btn {
+      margin-top: 1.5rem;
+      padding: 0.6rem 1.4rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      display: none;
+    }
+
+    .new-upload-btn:hover {
+      border-color: var(--accent);
+      background: #1a1a0f;
+      color: var(--accent);
+    }
+
+    .new-upload-btn.visible { display: inline-block; }
+
+    /* Animate cards in */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .color-card {
+      animation: cardIn 0.35s ease both;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark"></div>
+    <div>
+      <div class="logo-text">ChromaLens</div>
+      <div class="logo-sub">Colour Extractor</div>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Reveal the <span>palette</span><br/>inside any image.</h1>
+  <p>Upload any photo and instantly see the top 10 dominant colours — with HEX, RGB, and percentage breakdown. Click any swatch to copy.</p>
+</section>
+
+<section class="upload-section" id="uploadSection">
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept="image/*" />
+    <div class="drop-icon">🖼️</div>
+    <h2>Drop your image here</h2>
+    <p>or <span class="accent-link">click to browse</span> — JPG, PNG, WEBP, GIF</p>
+  </div>
+  <button class="new-upload-btn" id="newUploadBtn">↑ Upload another image</button>
+</section>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Clustering colour pixels…</p>
+</div>
+
+<section class="results-wrapper" id="resultsWrapper">
+  <div class="preview-panel">
+    <div class="label">Source Image</div>
+    <img id="previewImg" src="" alt="Uploaded image"/>
+    <div class="palette-bar" id="paletteBar"></div>
+  </div>
+  <div class="colors-panel">
+    <div class="label">Top 10 Dominant Colours</div>
+    <div class="color-grid" id="colorGrid"></div>
+  </div>
+</section>
+
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const loading = document.getElementById('loading');
+  const resultsWrapper = document.getElementById('resultsWrapper');
+  const colorGrid = document.getElementById('colorGrid');
+  const previewImg = document.getElementById('previewImg');
+  const paletteBar = document.getElementById('paletteBar');
+  const uploadSection = document.getElementById('uploadSection');
+  const newUploadBtn = document.getElementById('newUploadBtn');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragging');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  newUploadBtn.addEventListener('click', () => {
+    resultsWrapper.classList.remove('visible');
+    uploadSection.style.display = 'block';
+    newUploadBtn.classList.remove('visible');
+    fileInput.value = '';
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => { previewImg.src = e.target.result; };
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    uploadSection.style.display = 'none';
+    loading.classList.add('visible');
+    resultsWrapper.classList.remove('visible');
+    colorGrid.innerHTML = '';
+    paletteBar.innerHTML = '';
+
+    fetch('/extract', { method: 'POST', body: formData })
+      .then(r => r.json())
+      .then(data => {
+        loading.classList.remove('visible');
+        if (data.error) { alert(data.error); uploadSection.style.display = 'block'; return; }
+        renderColors(data.colors);
+        resultsWrapper.classList.add('visible');
+        newUploadBtn.classList.add('visible');
+      })
+      .catch(() => {
+        loading.classList.remove('visible');
+        alert('Something went wrong. Please try again.');
+        uploadSection.style.display = 'block';
+      });
+  }
+
+  function renderColors(colors) {
+    // Palette bar
+    colors.forEach(c => {
+      const seg = document.createElement('div');
+      seg.className = 'palette-bar-segment';
+      seg.style.flex = c.percentage;
+      seg.style.background = c.hex;
+      paletteBar.appendChild(seg);
+    });
+
+    // Cards
+    colors.forEach((c, i) => {
+      const card = document.createElement('div');
+      card.className = 'color-card';
+      card.style.animationDelay = `${i * 0.05}s`;
+
+      // Rank badge
+      const rank = document.createElement('div');
+      rank.className = 'rank-badge';
+      rank.textContent = i + 1;
+      card.appendChild(rank);
+
+      const swatch = document.createElement('div');
+      swatch.className = 'color-swatch';
+      swatch.style.background = c.hex;
+
+      const info = document.createElement('div');
+      info.className = 'color-info';
+      info.innerHTML = `
+        <div class="color-hex">${c.hex}</div>
+        <div class="color-rgb">rgb(${c.rgb.r}, ${c.rgb.g}, ${c.rgb.b})</div>
+        <div class="color-meta">
+          <span class="color-label">${c.label}</span>
+          <span class="color-pct">${c.percentage}%</span>
+        </div>
+      `;
+
+      const toast = document.createElement('div');
+      toast.className = 'copied-toast';
+      toast.textContent = '✓ Copied!';
+
+      card.appendChild(swatch);
+      card.appendChild(info);
+      card.appendChild(toast);
+
+      card.addEventListener('click', () => {
+        navigator.clipboard.writeText(c.hex).then(() => {
+          card.classList.add('copied');
+          setTimeout(() => card.classList.remove('copied'), 1200);
+        });
+      });
+
+      colorGrid.appendChild(card);
+    });
+  }
+</script>
+</body>
+</html>
